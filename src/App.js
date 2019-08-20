@@ -1,26 +1,54 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {Component} from 'react';
+import Dropzone from 'react-dropzone';
+import {Document, Page} from 'react-pdf';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends Component {
+    state = {
+        pdfFile: null,
+        documentProxy: null
+    };
+
+    render() {
+        return (
+            <div className="app">
+                {this.state.pdfFile ? this.renderPdf() : this.renderDropzone()}
+            </div>
+        );
+    }
+
+    renderDropzone = () => (
+        <Dropzone onDrop={this.handleDrop}>
+            {({getRootProps, getInputProps}) => (
+                <div className="drop-zone" {...getRootProps()}>
+                    <input {...getInputProps()} />
+                    <span>Drop PDF file here</span>
+                </div>
+            )}
+        </Dropzone>
+    );
+
+    renderPdf = () => (
+        <Document file={this.state.pdfFile} onLoadSuccess={this.handleDocumentLoadSuccess}>
+            <Page pageNumber={1} />
+        </Document>
+    );
+
+    handleDrop = files => {
+        this.setState({pdfFile: files[0]});
+    };
+
+    handleDocumentLoadSuccess = documentProxy => {
+        documentProxy.loadingTask.promise.then((documentProxy) => {
+            documentProxy.getPage(1).then(page => {
+                console.log(page);
+                page.getOperatorList().then(list => {
+                    console.log(list);
+                });
+            });
+        });
+        this.setState({documentProxy});
+    };
 }
 
 export default App;
